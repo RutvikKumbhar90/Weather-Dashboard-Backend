@@ -57,9 +57,15 @@ namespace WeatherDashboardBackend.Services
                 string countryCode = sys.TryGetProperty("country", out var countryEl) ? countryEl.GetString() ?? "" : "";
                 string country = new RegionInfo(countryCode).EnglishName;
 
+                // Convert sunrise and sunset from Unix time to India time
+                long sunriseUnix = sys.GetProperty("sunrise").GetInt64();
+                long sunsetUnix = sys.GetProperty("sunset").GetInt64();
+                var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+                var sunriseTime = TimeZoneInfo.ConvertTimeFromUtc(DateTimeOffset.FromUnixTimeSeconds(sunriseUnix).UtcDateTime, indiaTimeZone);
+                var sunsetTime = TimeZoneInfo.ConvertTimeFromUtc(DateTimeOffset.FromUnixTimeSeconds(sunsetUnix).UtcDateTime, indiaTimeZone);
+
                 int uvIndex = await GetUvIndexAsync(lat, lon);
 
-                var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
                 var indiaTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
 
                 return new WeatherResponse
@@ -82,7 +88,9 @@ namespace WeatherDashboardBackend.Services
                     Country = country,
                     WeekDay = indiaTime.ToString("dddd", CultureInfo.InvariantCulture),
                     Latitude = lat,
-                    Longitude = lon
+                    Longitude = lon,
+                    Sunrise = sunriseTime.ToString("hh:mm tt"),
+                    Sunset = sunsetTime.ToString("hh:mm tt")
                 };
             }
             catch

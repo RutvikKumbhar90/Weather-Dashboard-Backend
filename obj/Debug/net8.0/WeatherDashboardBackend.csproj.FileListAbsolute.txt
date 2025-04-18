@@ -446,3 +446,4 @@ C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashbo
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.pdb
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.genruntimeconfig.cache
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\ref\WeatherDashboardBackend.dll
+C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.sourcelink.json
