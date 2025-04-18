@@ -29,7 +29,6 @@ builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-
 if (jwtSettings == null)
 {
     throw new InvalidOperationException("JWT settings are not configured in the appsettings.");
@@ -54,7 +53,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Build the app
+// ? Add CORS BEFORE building the app
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
+// ? Build the app AFTER registering all services
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -68,6 +79,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Use CORS policy
+app.UseCors("AllowReactApp");
 
 // Enable authentication and authorization
 app.UseAuthentication();
