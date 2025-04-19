@@ -25,5 +25,7 @@
         public float? Latitude { get; set; }
         public float? Longitude { get; set; }
 
+        // Added for weather advice
+        public string? FriendlySuggestion { get; set; }
     }
 }
