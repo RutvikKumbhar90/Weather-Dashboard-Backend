@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WeatherDashboardBackend.Models;
 using WeatherDashboardBackend.Services;
 
@@ -56,6 +57,32 @@ namespace WeatherDashboardBackend.Controllers
                 return NotFound(new { message = $"User with ID {id} not found." });
 
             return NoContent();
+        }
+
+        // GET: api/User/me
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized("Invalid user ID in token.");
+            }
+
+            var user = await _userService.GetUserAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.Password = null; // Mask the password
+            return Ok(user);
         }
     }
 }

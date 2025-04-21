@@ -109,6 +109,7 @@ namespace WeatherDashboardBackend.Services
             return true;
         }
 
+        // Validate user credentials
         public async Task<UserResponse?> ValidateUserAsync(string email, string password)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email && u.Password == password);

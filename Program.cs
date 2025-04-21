@@ -15,6 +15,8 @@ builder.Services.AddControllersWithViews();
 // Register services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IWeatherService, WeatherService>();
+builder.Services.AddHttpClient<IWeatherNewsService, WeatherNewsService>();
+
 
 // Add TokenService
 builder.Services.AddSingleton<ITokenService, TokenService>();
@@ -53,19 +55,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ? Add CORS BEFORE building the app
+// Add CORS policy before building the app
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000")
+            policy.WithOrigins("http://localhost:3000") // React frontend URL
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
 
-// ? Build the app AFTER registering all services
+// Build the app
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
