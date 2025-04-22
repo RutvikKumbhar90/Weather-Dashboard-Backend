@@ -84,5 +84,47 @@ namespace WeatherDashboardBackend.Controllers
             user.Password = null; // Mask the password
             return Ok(user);
         }
+
+        // PUT: api/User/me
+        [HttpPut("me")]
+        [Authorize]
+        public async Task<ActionResult<UserResponse>> UpdateCurrentUser([FromBody] UserResponse user)
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized("Invalid or missing user ID in token.");
+            }
+
+            var updatedUser = await _userService.UpdateUserAsync(userId, user);
+            if (updatedUser == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            return Ok(updatedUser);
+        }
+
+        // DELETE: api/User/me
+        [HttpDelete("me")]
+        [Authorize]
+        public async Task<IActionResult> DeleteCurrentUser()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized("Invalid or missing user ID in token.");
+            }
+
+            var result = await _userService.DeleteUserAsync(userId);
+            if (!result)
+            {
+                return NotFound("User not found.");
+            }
+
+            return NoContent();
+        }
+
+
     }
 }
