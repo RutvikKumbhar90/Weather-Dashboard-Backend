@@ -4,15 +4,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using WeatherDashboardBackend.Data;
 
 #nullable disable
 
 namespace WeatherDashboardBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250428045524_InitalCreate")]
-    partial class InitalCreate
+    [Migration("20250428082841_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,7 +44,7 @@ namespace WeatherDashboardBackend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
@@ -66,6 +65,9 @@ namespace WeatherDashboardBackend.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("User");
                 });

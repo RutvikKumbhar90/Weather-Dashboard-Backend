@@ -1,29 +1,28 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WeatherDashboardBackend.Data;
 using WeatherDashboardBackend.Models;
-using Microsoft.AspNetCore.Identity; // Add this namespace
+using Microsoft.AspNetCore.Identity;
 using System.Net;
 using System.Globalization;
-using System.Text.Json;
 
 namespace WeatherDashboardBackend.Services
 {
     public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
-        private readonly PasswordHasher<UserResponse> _passwordHasher; // Declare password hasher
+        private readonly PasswordHasher<UserResponse> _passwordHasher;
 
         public UserService(ApplicationDbContext context)
         {
             _context = context;
-            _passwordHasher = new PasswordHasher<UserResponse>(); // Initialize the password hasher
+            _passwordHasher = new PasswordHasher<UserResponse>();
         }
 
         private string GetIndianTime()
         {
             var indianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
             var indianTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indianTimeZone);
-            return indianTime.ToString("hh:mm tt"); // AM/PM format
+            return indianTime.ToString("hh:mm tt");
         }
 
         private string GetLocalIPAddress()
@@ -41,14 +40,13 @@ namespace WeatherDashboardBackend.Services
 
         public async Task<UserResponse> CreateUserAsync(UserResponse user)
         {
-            // Hash the password before saving to the database
             var hashedPassword = _passwordHasher.HashPassword(user, user.Password);
 
             var newUser = new UserResponse
             {
                 Name = user.Name,
                 Email = user.Email,
-                Password = hashedPassword, // Save the hashed password
+                Password = hashedPassword,
                 City = user.City,
                 Country = user.Country,
                 Phone = user.Phone,
@@ -57,8 +55,20 @@ namespace WeatherDashboardBackend.Services
                 CreatedOn = GetLocalIPAddress(),
             };
 
-            _context.User.Add(newUser);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.User.Add(newUser);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException?.Message.Contains("duplicate key") ?? false)
+                {
+                    throw new InvalidOperationException("Email is already in use.");
+                }
+
+                throw;
+            }
 
             return newUser;
         }
@@ -66,9 +76,7 @@ namespace WeatherDashboardBackend.Services
         public async Task<UserResponse?> GetUserAsync(int id)
         {
             var user = await _context.User.FindAsync(id);
-            if (user == null) return null;
-
-            return user;
+            return user ?? null;
         }
 
         public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
@@ -108,31 +116,24 @@ namespace WeatherDashboardBackend.Services
             return true;
         }
 
+        public async Task<bool> IsEmailDuplicateAsync(string email)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+            return user != null;  // Returns true if email is found, false if not
+        }
+
         public async Task<UserResponse?> ValidateUserAsync(string email, string password)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return null;
 
-            // Verify the password against the stored hash
             var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
 
             if (result == PasswordVerificationResult.Failed)
                 return null;
 
-            user.Password = ""; // Mask password
+            user.Password = "";
             return user;
-        }
-
-        public string ExtractEmailErrorMessage(JsonElement errorResponse)
-        {
-            if (errorResponse.TryGetProperty("errors", out var errors) &&
-                errors.TryGetProperty("Email", out var emailErrors) &&
-                emailErrors.ValueKind == JsonValueKind.Array &&
-                emailErrors.GetArrayLength() > 0)
-            {
-                return emailErrors[0].GetString() ?? "Unknown email error.";
-            }
-            return "Email error not found.";
         }
     }
 }

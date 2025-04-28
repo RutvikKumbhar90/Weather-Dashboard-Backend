@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using WeatherDashboardBackend.Validation;
 
 namespace WeatherDashboardBackend.Models
 {
@@ -8,7 +9,7 @@ namespace WeatherDashboardBackend.Models
 
         public string? Name { get; set; }
 
-        // Add the UniqueEmail validation attribute
+        
         public string? Email { get; set; }
 
         public string? Password { get; set; }

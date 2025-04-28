@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Security.Claims;
 using WeatherDashboardBackend.Models;
 using WeatherDashboardBackend.Services;
@@ -20,17 +18,6 @@ namespace WeatherDashboardBackend.Controllers
             _userService = userService;
         }
 
-        // 🛠️ Added: Simple error response
-        public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
-        {
-            var firstError = modelStateDictionary
-                .Where(kvp => kvp.Value.Errors.Count > 0)
-                .Select(kvp => kvp.Value.Errors.First().ErrorMessage)
-                .FirstOrDefault();
-
-            return BadRequest(firstError ?? "Validation error occurred.");
-        }
-
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResponse>>> GetAllUsers()
         {
@@ -39,7 +26,6 @@ namespace WeatherDashboardBackend.Controllers
         }
 
         [HttpGet("currentuser")]
-        [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
@@ -58,22 +44,27 @@ namespace WeatherDashboardBackend.Controllers
         }
 
         [HttpPut("currentuser")]
-        [Authorize]
         public async Task<ActionResult<UserResponse>> UpdateCurrentUser([FromBody] UserResponse user)
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return Unauthorized("Invalid or missing user ID in token.");
 
-            var updatedUser = await _userService.UpdateUserAsync(userId, user);
-            if (updatedUser == null)
-                return NotFound("User not found.");
+            try
+            {
+                var updatedUser = await _userService.UpdateUserAsync(userId, user);
+                if (updatedUser == null)
+                    return NotFound("User not found.");
 
-            return Ok(updatedUser);
+                return Ok(updatedUser);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("currentuser")]
-        [Authorize]
         public async Task<IActionResult> DeleteCurrentUser()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");

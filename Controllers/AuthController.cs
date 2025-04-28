@@ -2,7 +2,6 @@
 using WeatherDashboardBackend.Models;
 using WeatherDashboardBackend.Services;
 using Microsoft.AspNetCore.Authorization;
-using System.Text.Json; // 🆕 Add for JsonElement
 
 namespace WeatherDashboardBackend.Controllers
 {
@@ -19,6 +18,19 @@ namespace WeatherDashboardBackend.Controllers
             _tokenService = tokenService;
         }
 
+        // New method to check if an email is already taken
+        [HttpGet("checkemail/{email}")]
+        [AllowAnonymous]
+        public async Task<ActionResult> CheckEmailDuplicate(string email)
+        {
+            var isDuplicate = await _userService.IsEmailDuplicateAsync(email);
+            if (isDuplicate)
+            {
+                return Conflict(new { message = "This email is already registered." });
+            }
+            return Ok(new { message = "This email is available." });
+        }
+
         // POST: api/Auth/register
         [HttpPost("register")]
         [AllowAnonymous]
@@ -29,10 +41,24 @@ namespace WeatherDashboardBackend.Controllers
                 return BadRequest("Email and password are required.");
             }
 
-            var createdUser = await _userService.CreateUserAsync(user);
-            return CreatedAtAction(nameof(Register), new { id = createdUser.Id }, createdUser);
-        }
+            // Check if email is already registered
+            var isDuplicate = await _userService.IsEmailDuplicateAsync(user.Email);
+            if (isDuplicate)
+            {
+                return Conflict(new { message = "This email is already registered." });
+            }
 
+            // Proceed with user registration
+            try
+            {
+                var createdUser = await _userService.CreateUserAsync(user);
+                return CreatedAtAction(nameof(Register), new { id = createdUser.Id }, createdUser);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while processing your request.", error = ex.Message });
+            }
+        }
 
         // POST: api/Auth/login
         [HttpPost("login")]

@@ -18,7 +18,6 @@ builder.Services.AddHttpClient<IWeatherService, WeatherService>();
 builder.Services.AddHttpClient<IWeatherNewsService, WeatherNewsService>();
 builder.Services.AddHttpClient<ITemperatureService, TemperatureService>();
 
-
 // Add TokenService
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
