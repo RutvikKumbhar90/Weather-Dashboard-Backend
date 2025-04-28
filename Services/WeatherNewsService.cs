@@ -14,7 +14,7 @@ public class WeatherNewsService : IWeatherNewsService
 
     public async Task<WeatherNewsResponse> GetWeatherNewsAsync()
     {
-        var requestUrl = $"https://newsapi.org/v2/everything?q=weather+forecast+climate+storm+rain+temperature&language=en&sortBy=publishedAt&apiKey={_apiKey}";
+        var requestUrl = $"https://newsapi.org/v2/everything?q=weather+forecast+climate+storm+rain+temperature&language=en&sortBy=publishedAt&pageSize=6&apiKey={_apiKey}";
 
         var request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
         request.Headers.Add("User-Agent", "WeatherDashboardApp/1.0");
@@ -43,11 +43,17 @@ public class WeatherNewsService : IWeatherNewsService
                 Description = article.GetProperty("description").GetString(),
                 Url = article.GetProperty("url").GetString(),
                 UrlToImage = article.GetProperty("urlToImage").GetString(),
-                PublishedAt = article.GetProperty("publishedAt").GetDateTime()
+                PublishedAt = ConvertToIndianTime(article.GetProperty("publishedAt").GetDateTime())
             }).ToList()
         };
 
         return result;
     }
 
+    private string ConvertToIndianTime(DateTime utcTime)
+    {
+        var indianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+        var indianTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, indianTimeZone);
+        return indianTime.ToString("yyyy-MM-dd hh:mm tt"); // e.g., "2025-04-24 03:45 PM"
+    }
 }

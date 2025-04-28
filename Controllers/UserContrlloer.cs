@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Security.Claims;
 using WeatherDashboardBackend.Models;
 using WeatherDashboardBackend.Services;
@@ -18,18 +20,17 @@ namespace WeatherDashboardBackend.Controllers
             _userService = userService;
         }
 
-        // GET: api/User/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserResponse>> GetUser(int id)
+        // 🛠️ Added: Simple error response
+        public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
         {
-            var user = await _userService.GetUserAsync(id);
-            if (user == null)
-                return NotFound(new { message = $"User with ID {id} not found." });
+            var firstError = modelStateDictionary
+                .Where(kvp => kvp.Value.Errors.Count > 0)
+                .Select(kvp => kvp.Value.Errors.First().ErrorMessage)
+                .FirstOrDefault();
 
-            return Ok(user);
+            return BadRequest(firstError ?? "Validation error occurred.");
         }
 
-        // GET: api/User
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResponse>>> GetAllUsers()
         {
@@ -37,94 +38,53 @@ namespace WeatherDashboardBackend.Controllers
             return Ok(users);
         }
 
-        // PUT: api/User/{id}
-        [HttpPut("{id}")]
-        public async Task<ActionResult<UserResponse>> UpdateUser(int id, UserResponse user)
-        {
-            var updatedUser = await _userService.UpdateUserAsync(id, user);
-            if (updatedUser == null)
-                return NotFound(new { message = $"User with ID {id} not found." });
-
-            return Ok(updatedUser);
-        }
-
-        // DELETE: api/User/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var result = await _userService.DeleteUserAsync(id);
-            if (!result)
-                return NotFound(new { message = $"User with ID {id} not found." });
-
-            return NoContent();
-        }
-
-        // GET: api/User/me
-        [HttpGet("me")]
+        [HttpGet("currentuser")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
             if (userIdClaim == null)
-            {
                 return Unauthorized("User ID not found in token.");
-            }
 
             if (!int.TryParse(userIdClaim.Value, out int userId))
-            {
                 return Unauthorized("Invalid user ID in token.");
-            }
 
             var user = await _userService.GetUserAsync(userId);
             if (user == null)
-            {
                 return NotFound("User not found.");
-            }
 
-            user.Password = null; // Mask the password
+            user.Password = null; // Mask password
             return Ok(user);
         }
 
-        // PUT: api/User/me
-        [HttpPut("me")]
+        [HttpPut("currentuser")]
         [Authorize]
         public async Task<ActionResult<UserResponse>> UpdateCurrentUser([FromBody] UserResponse user)
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
                 return Unauthorized("Invalid or missing user ID in token.");
-            }
 
             var updatedUser = await _userService.UpdateUserAsync(userId, user);
             if (updatedUser == null)
-            {
                 return NotFound("User not found.");
-            }
 
             return Ok(updatedUser);
         }
 
-        // DELETE: api/User/me
-        [HttpDelete("me")]
+        [HttpDelete("currentuser")]
         [Authorize]
         public async Task<IActionResult> DeleteCurrentUser()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-            {
                 return Unauthorized("Invalid or missing user ID in token.");
-            }
 
             var result = await _userService.DeleteUserAsync(userId);
             if (!result)
-            {
                 return NotFound("User not found.");
-            }
 
             return NoContent();
         }
-
-
     }
 }

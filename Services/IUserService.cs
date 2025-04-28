@@ -1,4 +1,5 @@
-﻿using WeatherDashboardBackend.Models;
+﻿using System.Text.Json;
+using WeatherDashboardBackend.Models;
 
 namespace WeatherDashboardBackend.Services
 {
@@ -10,5 +11,6 @@ namespace WeatherDashboardBackend.Services
         Task<UserResponse?> UpdateUserAsync(int id, UserResponse user);
         Task<bool> DeleteUserAsync(int id);
         Task<UserResponse?> ValidateUserAsync(string email, string password);
+
     }
 }

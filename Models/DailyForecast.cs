@@ -2,8 +2,8 @@
 {
     public class DailyForecast
     {
-        public string? Day { get; set; } 
-        public float MinTemperature { get; set; }
-        public float MaxTemperature { get; set; }
+        public string? Day { get; set; }
+        public float Max { get; set; }
+        public float Min { get; set; }
     }
 }

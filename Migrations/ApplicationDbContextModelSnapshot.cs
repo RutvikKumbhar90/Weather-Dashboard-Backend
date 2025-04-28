@@ -35,6 +35,12 @@ namespace WeatherDashboardBackend.Migrations
                     b.Property<string>("Country")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("CreatedAt")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CreatedOn")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
 
@@ -48,6 +54,12 @@ namespace WeatherDashboardBackend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("PostalCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UpdatedAt")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UpdatedOn")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

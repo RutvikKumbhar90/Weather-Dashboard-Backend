@@ -16,6 +16,7 @@ namespace WeatherDashboardBackend.Controllers
             _weatherService = weatherService;
         }
 
+        // Get current weather for a city
         [HttpGet("current")]
         public async Task<ActionResult<WeatherResponse>> GetCurrentWeather([FromQuery] string city)
         {
@@ -34,16 +35,25 @@ namespace WeatherDashboardBackend.Controllers
             return Ok(weather);
         }
 
+        // Get hourly forecast for a city
         [HttpGet("hourly")]
         public async Task<IActionResult> GetHourlyForecast([FromQuery] string city)
         {
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return BadRequest("City name is required.");
+            }
+
             var hourlyData = await _weatherService.GetHourlyForecastAsync(city);
+
             if (hourlyData == null)
+            {
                 return NotFound("Unable to fetch hourly forecast.");
+            }
 
             return Ok(hourlyData);
         }
 
-
+        // Get daily forecast for a city
     }
 }

@@ -11,8 +11,8 @@ using WeatherDashboardBackend.Data;
 namespace WeatherDashboardBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250416103722_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250428045524_InitalCreate")]
+    partial class InitalCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,6 +38,12 @@ namespace WeatherDashboardBackend.Migrations
                     b.Property<string>("Country")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("CreatedAt")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CreatedOn")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Email")
                         .HasColumnType("longtext");
 
@@ -51,6 +57,12 @@ namespace WeatherDashboardBackend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("PostalCode")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UpdatedAt")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("UpdatedOn")
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

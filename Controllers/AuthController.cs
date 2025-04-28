@@ -2,6 +2,7 @@
 using WeatherDashboardBackend.Models;
 using WeatherDashboardBackend.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.Json; // 🆕 Add for JsonElement
 
 namespace WeatherDashboardBackend.Controllers
 {
@@ -31,6 +32,7 @@ namespace WeatherDashboardBackend.Controllers
             var createdUser = await _userService.CreateUserAsync(user);
             return CreatedAtAction(nameof(Register), new { id = createdUser.Id }, createdUser);
         }
+
 
         // POST: api/Auth/login
         [HttpPost("login")]

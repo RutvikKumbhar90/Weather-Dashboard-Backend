@@ -53,6 +53,10 @@ namespace WeatherDashboardBackend.Services
                 float lat = coord.GetProperty("lat").GetSingle();
                 float lon = coord.GetProperty("lon").GetSingle();
 
+                var forecastRequest = $"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_max,temperature_2m_min&timezone=auto";
+                var forecaseResponse = await _httpClient.GetStringAsync(forecastRequest);
+                var forecastData = JsonDocument.Parse(forecaseResponse).RootElement;
+
                 string countryCode = sys.TryGetProperty("country", out var countryEl) ? countryEl.GetString() ?? "" : "";
                 string country = new RegionInfo(countryCode).EnglishName;
 
@@ -69,10 +73,9 @@ namespace WeatherDashboardBackend.Services
                 DateTime sunsetTime = TimeZoneInfo.ConvertTimeFromUtc(DateTimeOffset.FromUnixTimeSeconds(sunsetUnix).UtcDateTime, userTimeZone);
 
                 int uvIndex = await GetUvIndexAsync(lat, lon);
-                // Ensure the description is not null by using a null-coalescing operator
                 string suggestion = GetFriendlyWeatherSuggestion(weather.GetProperty("description").GetString() ?? "Unknown", precipitation, uvIndex);
 
-                return new WeatherResponse
+                var weatherResponse = new WeatherResponse
                 {
                     Temperature = main.GetProperty("temp").GetSingle(),
                     FeelsLike = feelsLike,
@@ -88,7 +91,7 @@ namespace WeatherDashboardBackend.Services
                     WeatherDescription = weather.GetProperty("description").GetString(),
                     WeatherIcon = weather.GetProperty("icon").GetString(),
                     Time = currentTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
-                    City = city,
+                    City = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(city.Trim().ToLower()),
                     Country = country,
                     WeekDay = currentTime.ToString("dddd", CultureInfo.InvariantCulture),
                     Latitude = lat,
@@ -97,6 +100,30 @@ namespace WeatherDashboardBackend.Services
                     Sunset = sunsetTime.ToString("hh:mm tt"),
                     FriendlySuggestion = suggestion
                 };
+
+                // Fetch the daily forecast and add it to the response
+                var daily = forecastData.GetProperty("daily");
+                var dates = daily.GetProperty("time").EnumerateArray().Select(x => x.GetString()).ToList();
+                var maxTemps = daily.GetProperty("temperature_2m_max").EnumerateArray().Select(x => x.GetSingle()).ToList();
+                var minTemps = daily.GetProperty("temperature_2m_min").EnumerateArray().Select(x => x.GetSingle()).ToList();
+
+                var dailyForecasts = new List<DailyForecast>();
+                for (int i = 0; i < dates.Count; i++)
+                {
+                    var date = DateTime.Parse(dates[i]);
+                    string dayName = date.ToString("ddd"); // Short day name like "Mon", "Tue"
+                    dailyForecasts.Add(new DailyForecast
+                    {
+                        Day = dayName,
+                        Max = maxTemps[i],
+                        Min = minTemps[i]
+                    });
+                }
+
+                // Add the daily forecast to the response
+                weatherResponse.Daily = dailyForecasts;
+
+                return weatherResponse;
             }
             catch
             {
@@ -130,7 +157,6 @@ namespace WeatherDashboardBackend.Services
                 var forecastList = forecastData.GetProperty("list");
                 var result = new List<HourlyForecast>();
 
-                // Get the timezone offset (in seconds) for the city
                 int timezoneOffset = 0;
                 if (forecastData.TryGetProperty("city", out var cityData) &&
                     cityData.TryGetProperty("timezone", out var timezoneElement))
@@ -138,13 +164,12 @@ namespace WeatherDashboardBackend.Services
                     timezoneOffset = timezoneElement.GetInt32();
                 }
 
-                foreach (var item in forecastList.EnumerateArray().Take(8)) // ~24 hours (3-hour intervals)
+                foreach (var item in forecastList.EnumerateArray().Take(8))
                 {
                     var main = item.GetProperty("main");
                     var weather = item.GetProperty("weather")[0];
-                    var utcTime = item.GetProperty("dt").GetInt64(); // Unix timestamp in UTC
+                    var utcTime = item.GetProperty("dt").GetInt64();
 
-                    // Convert UTC timestamp to local time using the offset
                     var localTime = DateTimeOffset.FromUnixTimeSeconds(utcTime)
                         .ToOffset(TimeSpan.FromSeconds(timezoneOffset))
                         .DateTime;
@@ -166,20 +191,13 @@ namespace WeatherDashboardBackend.Services
             }
         }
 
-        
-
-
-
-
-
-        // Helper: Get Windows timezone ID by country code
         private string GetTimeZoneIdByCountryCode(string countryCode)
         {
             return countryCode.ToUpper() switch
             {
                 "IN" => "India Standard Time",
                 "AE" => "Arabian Standard Time",
-                "US" => "Eastern Standard Time", // or dynamic based on city
+                "US" => "Eastern Standard Time",
                 "GB" => "GMT Standard Time",
                 "JP" => "Tokyo Standard Time",
                 "AU" => "AUS Eastern Standard Time",
@@ -191,7 +209,6 @@ namespace WeatherDashboardBackend.Services
             };
         }
 
-        // Helper: Get a friendly suggestion based on weather conditions
         private string GetFriendlyWeatherSuggestion(string weatherDescription, float precipitation, int uvIndex)
         {
             if (weatherDescription.Contains("rain"))
@@ -222,7 +239,6 @@ namespace WeatherDashboardBackend.Services
             }
 
             return "Stay comfortable and enjoy your day! 🌤️😌";
-
         }
     }
 }

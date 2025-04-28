@@ -10,6 +10,7 @@ namespace WeatherDashboardBackend.Data
         {
         }
 
+        // Override the OnModelCreating method to configure the model
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

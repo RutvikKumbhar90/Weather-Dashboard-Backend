@@ -6,7 +6,5 @@ namespace WeatherDashboardBackend.Services
     {
         Task<WeatherResponse?> GetCurrentWeatherAsync(string city);
         Task<List<HourlyForecast>?> GetHourlyForecastAsync(string city);
-
-
     }
 }
