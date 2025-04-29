@@ -15,11 +15,25 @@ namespace WeatherDashboardBackend.Services
             _apiKey = configuration["OpenWeather:ApiKey"];
         }
 
-        public async Task<WeatherResponse?> GetCurrentWeatherAsync(string city)
+        public async Task<WeatherResponse?> GetCurrentWeatherAsync(string? city, double? latitude = null, double? longitude = null)
         {
             try
             {
-                var url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={_apiKey}&units=metric";
+                string url;
+
+                if (!string.IsNullOrWhiteSpace(city))
+                {
+                    url = $"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={_apiKey}&units=metric";
+                }
+                else if (latitude.HasValue && longitude.HasValue)
+                {
+                    url = $"https://api.openweathermap.org/data/2.5/weather?lat={latitude.Value}&lon={longitude.Value}&appid={_apiKey}&units=metric";
+                }
+                else
+                {
+                    return null; // Neither city nor coordinates provided
+                }
+
                 var response = await _httpClient.GetStringAsync(url);
                 var weatherData = JsonDocument.Parse(response).RootElement;
 
@@ -75,6 +89,12 @@ namespace WeatherDashboardBackend.Services
                 int uvIndex = await GetUvIndexAsync(lat, lon);
                 string suggestion = GetFriendlyWeatherSuggestion(weather.GetProperty("description").GetString() ?? "Unknown", precipitation, uvIndex);
 
+                // 👉 FIX City name if missing
+                if (string.IsNullOrWhiteSpace(city) || city == "Unknown")
+                {
+                    city = await GetCityNameFromCoordinates(lat, lon);
+                }
+
                 var weatherResponse = new WeatherResponse
                 {
                     Temperature = main.GetProperty("temp").GetSingle(),
@@ -91,7 +111,7 @@ namespace WeatherDashboardBackend.Services
                     WeatherDescription = weather.GetProperty("description").GetString(),
                     WeatherIcon = weather.GetProperty("icon").GetString(),
                     Time = currentTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
-                    City = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(city.Trim().ToLower()),
+                    City = city != null ? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(city.Trim().ToLower()) : "Unknown",
                     Country = country,
                     WeekDay = currentTime.ToString("dddd", CultureInfo.InvariantCulture),
                     Latitude = lat,
@@ -120,7 +140,6 @@ namespace WeatherDashboardBackend.Services
                     });
                 }
 
-                // Add the daily forecast to the response
                 weatherResponse.Daily = dailyForecasts;
 
                 return weatherResponse;
@@ -129,6 +148,30 @@ namespace WeatherDashboardBackend.Services
             {
                 return null;
             }
+        }
+
+        private async Task<string> GetCityNameFromCoordinates(float lat, float lon)
+        {
+            try
+            {
+                var url = $"http://api.openweathermap.org/geo/1.0/reverse?lat={lat}&lon={lon}&limit=1&appid={_apiKey}";
+                var response = await _httpClient.GetStringAsync(url);
+                var geoData = JsonDocument.Parse(response).RootElement;
+
+                if (geoData.GetArrayLength() > 0)
+                {
+                    var firstResult = geoData[0];
+                    if (firstResult.TryGetProperty("name", out var cityName))
+                    {
+                        return cityName.GetString() ?? "Unknown";
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore errors, return Unknown
+            }
+            return "Unknown";
         }
 
         private async Task<int> GetUvIndexAsync(float lat, float lon)
@@ -146,11 +189,25 @@ namespace WeatherDashboardBackend.Services
             }
         }
 
-        public async Task<List<HourlyForecast>?> GetHourlyForecastAsync(string city)
+        public async Task<List<HourlyForecast>?> GetHourlyForecastAsync(string? city = null, double? latitude = null, double? longitude = null)
         {
             try
             {
-                var url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={_apiKey}&units=metric";
+                string url;
+
+                if (!string.IsNullOrWhiteSpace(city))
+                {
+                    url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={_apiKey}&units=metric";
+                }
+                else if (latitude.HasValue && longitude.HasValue)
+                {
+                    url = $"https://api.openweathermap.org/data/2.5/forecast?lat={latitude.Value}&lon={longitude.Value}&appid={_apiKey}&units=metric";
+                }
+                else
+                {
+                    return null;
+                }
+
                 var response = await _httpClient.GetStringAsync(url);
                 var forecastData = JsonDocument.Parse(response).RootElement;
 

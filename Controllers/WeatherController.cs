@@ -16,16 +16,16 @@ namespace WeatherDashboardBackend.Controllers
             _weatherService = weatherService;
         }
 
-        // Get current weather for a city
+        // Get current weather for a city or coordinates
         [HttpGet("current")]
-        public async Task<ActionResult<WeatherResponse>> GetCurrentWeather([FromQuery] string city)
+        public async Task<ActionResult<WeatherResponse>> GetCurrentWeather([FromQuery] string? city, [FromQuery] double? latitude, [FromQuery] double? longitude)
         {
-            if (string.IsNullOrWhiteSpace(city))
+            if (string.IsNullOrWhiteSpace(city) && !(latitude.HasValue && longitude.HasValue))
             {
-                return BadRequest("City name is required.");
+                return BadRequest("Either city name or coordinates are required.");
             }
 
-            var weather = await _weatherService.GetCurrentWeatherAsync(city);
+            var weather = await _weatherService.GetCurrentWeatherAsync(city, latitude, longitude);
 
             if (weather == null)
             {
@@ -37,14 +37,14 @@ namespace WeatherDashboardBackend.Controllers
 
         // Get hourly forecast for a city
         [HttpGet("hourly")]
-        public async Task<IActionResult> GetHourlyForecast([FromQuery] string city)
+        public async Task<IActionResult> GetHourlyForecast([FromQuery] string? city, [FromQuery] double? latitude, [FromQuery] double? longitude)
         {
-            if (string.IsNullOrWhiteSpace(city))
+            if (string.IsNullOrWhiteSpace(city) && !(latitude.HasValue && longitude.HasValue))
             {
-                return BadRequest("City name is required.");
+                return BadRequest("Either city name or coordinates are required.");
             }
 
-            var hourlyData = await _weatherService.GetHourlyForecastAsync(city);
+            var hourlyData = await _weatherService.GetHourlyForecastAsync(city, latitude, longitude);
 
             if (hourlyData == null)
             {
@@ -54,6 +54,5 @@ namespace WeatherDashboardBackend.Controllers
             return Ok(hourlyData);
         }
 
-        // Get daily forecast for a city
     }
 }
