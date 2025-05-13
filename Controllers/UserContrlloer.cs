@@ -6,18 +6,21 @@ using WeatherDashboardBackend.Services;
 
 namespace WeatherDashboardBackend.Controllers
 {
-    [Authorize]
+    // The UserController handles user-related actions.
+    [Authorize] // ensures that only authenticated users can access these endpoints.
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
 
+        // Constructor for injecting the IUserService
         public UserController(IUserService userService)
         {
             _userService = userService;
         }
 
+        // Endpoint to get all users (accessible only by authorized users)
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResponse>>> GetAllUsers()
         {
@@ -25,6 +28,7 @@ namespace WeatherDashboardBackend.Controllers
             return Ok(users);
         }
 
+        // Endpoint to get the current logged-in user (based on JWT token claim)
         [HttpGet("currentuser")]
         public async Task<IActionResult> GetCurrentUser()
         {
@@ -39,10 +43,11 @@ namespace WeatherDashboardBackend.Controllers
             if (user == null)
                 return NotFound("User not found.");
 
-            user.Password = null; // Mask password
+            user.Password = null; // Remove the password from response
             return Ok(user);
         }
 
+        // Endpoint to update the current logged-in user's information
         [HttpPut("currentuser")]
         public async Task<ActionResult<UserResponse>> UpdateCurrentUser([FromBody] UserResponse user)
         {
@@ -64,6 +69,7 @@ namespace WeatherDashboardBackend.Controllers
             }
         }
 
+        // Endpoint to delete the current logged-in user
         [HttpDelete("currentuser")]
         public async Task<IActionResult> DeleteCurrentUser()
         {
@@ -75,6 +81,26 @@ namespace WeatherDashboardBackend.Controllers
             if (!result)
                 return NotFound("User not found.");
 
+            return NoContent();
+        }
+
+        // PATCH endpoint for updating password (no login required, using email)
+        [HttpPatch("resetpassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] UpdatePasswordRequest request)
+        {
+            // Validate the input
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                return BadRequest("New password must not be empty.");
+
+            if (request.NewPassword != request.ConfirmPassword)
+                return BadRequest("Passwords do not match.");
+
+            // Call the service to reset the password based on the email
+            var success = await _userService.ResetUserPasswordAsync(request.Email, request.NewPassword);
+            if (!success)
+                return NotFound("User not found.");
+
+            // Successfully reset password, no content to return
             return NoContent();
         }
     }

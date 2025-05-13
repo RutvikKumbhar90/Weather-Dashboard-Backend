@@ -331,6 +331,9 @@ C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashbo
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\MySqlConnector.dll
+C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Npgsql.dll
+C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Pomelo.EntityFrameworkCore.MySql.dll
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\System.CodeDom.dll
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\System.Composition.AttributedModel.dll
@@ -400,6 +403,7 @@ C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashbo
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.RazorAssemblyInfo.cache
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.RazorAssemblyInfo.cs
+C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.sourcelink.json
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\scopedcss\bundle\WeatherDashboardBackend.styles.css
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\scopedcss\projectbundle\WeatherDashboardBackend.bundle.scp.css
@@ -418,5 +422,3 @@ C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashbo
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.pdb
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.genruntimeconfig.cache
 C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\ref\WeatherDashboardBackend.dll
-C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\obj\Debug\net8.0\WeatherDashboardBackend.sourcelink.json
-C:\Users\rutvik.kumbhar_jadeg\source\repos\WeatherDashboardBackend\WeatherDashboardBackend\bin\Debug\net8.0\Newtonsoft.Json.dll

@@ -24,10 +24,10 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 // Register JwtSettings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
-// Setup MySQL Database Context
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionMySQL");
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+// Setup PostgreSQL Database Context (Neon)
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionPostgreSQL");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();

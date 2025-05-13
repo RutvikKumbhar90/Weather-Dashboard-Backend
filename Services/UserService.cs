@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WeatherDashboardBackend.Data;
-using WeatherDashboardBackend.Models;
+using WeatherDashboardBackend.Models; 
 using Microsoft.AspNetCore.Identity;
-using System.Net;
+using System.Net; // for fetching local IP addresses.
 using System.Globalization;
 
 namespace WeatherDashboardBackend.Services
@@ -119,7 +119,7 @@ namespace WeatherDashboardBackend.Services
         public async Task<bool> IsEmailDuplicateAsync(string email)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
-            return user != null;  // Returns true if email is found, false if not
+            return user != null;
         }
 
         public async Task<UserResponse?> ValidateUserAsync(string email, string password)
@@ -134,6 +134,20 @@ namespace WeatherDashboardBackend.Services
 
             user.Password = "";
             return user;
+        }
+
+        // New method for resetting password based on email
+        public async Task<bool> ResetUserPasswordAsync(string email, string newPassword)
+        {
+            var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return false;
+
+            user.Password = _passwordHasher.HashPassword(user, newPassword);
+            user.UpdatedAt = DateTime.Now.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("en-IN"));
+            user.UpdatedOn = GetLocalIPAddress();
+
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

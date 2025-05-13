@@ -29,7 +29,7 @@ namespace WeatherDashboardBackend.Controllers
 
             if (weather == null)
             {
-                return NotFound("Weather data not found.");
+                return NotFound("City not found. Please try again.");
             }
 
             return Ok(weather);
