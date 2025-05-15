@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace WeatherDashboardBackend.Models
 {
     public class UserResponse

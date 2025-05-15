@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WeatherDashboardBackend.Data;
-using WeatherDashboardBackend.Models; 
 using Microsoft.AspNetCore.Identity;
-using System.Net; // for fetching local IP addresses.
-using System.Globalization;
+using WeatherDashboardBackend.Data;
+using WeatherDashboardBackend.Models;
+using System.Net;
 
 namespace WeatherDashboardBackend.Services
 {
@@ -18,71 +17,25 @@ namespace WeatherDashboardBackend.Services
             _passwordHasher = new PasswordHasher<UserResponse>();
         }
 
-        private string GetIndianTime()
-        {
-            var indianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-            var indianTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indianTimeZone);
-            return indianTime.ToString("hh:mm tt");
-        }
-
-        private string GetLocalIPAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-            return "IP Not Found";
-        }
-
         public async Task<UserResponse> CreateUserAsync(UserResponse user)
         {
-            var hashedPassword = _passwordHasher.HashPassword(user, user.Password);
+            user.Password = _passwordHasher.HashPassword(user, user.Password ?? "");
+            user.CreatedAt = GetIndianTime();
+            user.CreatedOn = GetIpAddress();
 
-            var newUser = new UserResponse
-            {
-                Name = user.Name,
-                Email = user.Email,
-                Password = hashedPassword,
-                City = user.City,
-                Country = user.Country,
-                Phone = user.Phone,
-                PostalCode = user.PostalCode,
-                CreatedAt = DateTime.Now.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("en-IN")),
-                CreatedOn = GetLocalIPAddress(),
-            };
-
-            try
-            {
-                _context.User.Add(newUser);
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                if (ex.InnerException?.Message.Contains("duplicate key") ?? false)
-                {
-                    throw new InvalidOperationException("Email is already in use.");
-                }
-
-                throw;
-            }
-
-            return newUser;
+            await _context.User.AddAsync(user);
+            await _context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<UserResponse?> GetUserAsync(int id)
         {
-            var user = await _context.User.FindAsync(id);
-            return user ?? null;
+            return await _context.User.FindAsync(id);
         }
 
         public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
         {
-            var users = await _context.User.ToListAsync();
-            return users;
+            return await _context.User.ToListAsync();
         }
 
         public async Task<UserResponse?> UpdateUserAsync(int id, UserResponse user)
@@ -90,19 +43,24 @@ namespace WeatherDashboardBackend.Services
             var existingUser = await _context.User.FindAsync(id);
             if (existingUser == null) return null;
 
-            existingUser.Name = user.Name ?? existingUser.Name;
-            existingUser.Email = user.Email ?? existingUser.Email;
-            existingUser.Password = user.Password ?? existingUser.Password;
-            existingUser.City = user.City ?? existingUser.City;
-            existingUser.Country = user.Country ?? existingUser.Country;
-            existingUser.Phone = user.Phone ?? existingUser.Phone;
-            existingUser.PostalCode = user.PostalCode ?? existingUser.PostalCode;
+            // Update fields
+            existingUser.Name = user.Name;
+            existingUser.Email = user.Email;
 
-            existingUser.UpdatedAt = DateTime.Now.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("en-IN"));
-            existingUser.UpdatedOn = GetLocalIPAddress();
+            if (!string.IsNullOrWhiteSpace(user.Password))
+            {
+                existingUser.Password = _passwordHasher.HashPassword(user, user.Password);
+            }
 
+            existingUser.City = user.City;
+            existingUser.Country = user.Country;
+            existingUser.Phone = user.Phone;
+            existingUser.PostalCode = user.PostalCode;
+            existingUser.UpdatedAt = GetIndianTime();
+            existingUser.UpdatedOn = GetIpAddress();
+
+            _context.User.Update(existingUser);
             await _context.SaveChangesAsync();
-
             return existingUser;
         }
 
@@ -118,8 +76,7 @@ namespace WeatherDashboardBackend.Services
 
         public async Task<bool> IsEmailDuplicateAsync(string email)
         {
-            var user = await _context.User.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
-            return user != null;
+            return await _context.User.AnyAsync(u => u.Email == email);
         }
 
         public async Task<UserResponse?> ValidateUserAsync(string email, string password)
@@ -127,27 +84,47 @@ namespace WeatherDashboardBackend.Services
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return null;
 
-            var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
-
-            if (result == PasswordVerificationResult.Failed)
-                return null;
-
-            user.Password = "";
-            return user;
+            var result = _passwordHasher.VerifyHashedPassword(user, user.Password ?? "", password);
+            return result == PasswordVerificationResult.Success ? user : null;
         }
 
-        // New method for resetting password based on email
         public async Task<bool> ResetUserPasswordAsync(string email, string newPassword)
         {
             var user = await _context.User.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null) return false;
 
             user.Password = _passwordHasher.HashPassword(user, newPassword);
-            user.UpdatedAt = DateTime.Now.ToString("dd/MM/yyyy hh:mm tt", new CultureInfo("en-IN"));
-            user.UpdatedOn = GetLocalIPAddress();
-
+            _context.User.Update(user);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private string GetIndianTime()
+        {
+            var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+            var indiaTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
+            return indiaTime.ToString("yyyy-MM-dd HH:mm:ss tt");
+        }
+
+        private string GetIpAddress()
+        {
+            try
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore and fallback
+            }
+
+            return "IP_NOT_FOUND";
         }
     }
 }

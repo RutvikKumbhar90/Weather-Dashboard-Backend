@@ -1,33 +1,27 @@
-using Microsoft.EntityFrameworkCore;
-using WeatherDashboardBackend.Services;
-using WeatherDashboardBackend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WeatherDashboardBackend.Models;
+using WeatherDashboardBackend.Services;
+using WeatherDashboardBackend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
-builder.Services.AddControllersWithViews();
-
-// Register services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddHttpClient<IWeatherService, WeatherService>();
-builder.Services.AddHttpClient<IWeatherNewsService, WeatherNewsService>();
-builder.Services.AddHttpClient<ITemperatureService, TemperatureService>();
-
-// Add TokenService
-builder.Services.AddSingleton<ITokenService, TokenService>();
-
-// Register JwtSettings
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 // Setup PostgreSQL Database Context (Neon)
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionPostgreSQL");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+// Register services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddHttpClient<IWeatherService, WeatherService>();
+builder.Services.AddHttpClient<IWeatherNewsService, WeatherNewsService>();
+builder.Services.AddHttpClient<ITemperatureService, TemperatureService>();
+
+// Register JwtSettings
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -55,6 +49,9 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Add Authorization Service
+builder.Services.AddAuthorization();
+
 // Add CORS policy before building the app
 builder.Services.AddCors(options =>
 {
@@ -66,6 +63,9 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+
+// Add Controllers (This is the missing line)
+builder.Services.AddControllers();
 
 // Build the app
 var app = builder.Build();
@@ -87,7 +87,7 @@ app.UseCors("AllowReactApp");
 
 // Enable authentication and authorization
 app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthorization(); // Ensure this comes after UseAuthentication()
 
 // Configure routes
 app.MapControllerRoute(

@@ -18,7 +18,6 @@ namespace WeatherDashboardBackend.Controllers
             _tokenService = tokenService;
         }
 
-        // New method to check if an email is already taken
         [HttpGet("checkemail/{email}")]
         [AllowAnonymous]
         public async Task<ActionResult> CheckEmailDuplicate(string email)
@@ -31,7 +30,6 @@ namespace WeatherDashboardBackend.Controllers
             return Ok(new { message = "This email is available." });
         }
 
-        // POST: api/Auth/register
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult<UserResponse>> Register(UserResponse user)
@@ -41,14 +39,12 @@ namespace WeatherDashboardBackend.Controllers
                 return BadRequest("Email and password are required.");
             }
 
-            // Check if email is already registered
             var isDuplicate = await _userService.IsEmailDuplicateAsync(user.Email);
             if (isDuplicate)
             {
                 return Conflict(new { message = "This email is already registered." });
             }
 
-            // Proceed with user registration
             try
             {
                 var createdUser = await _userService.CreateUserAsync(user);
@@ -60,7 +56,6 @@ namespace WeatherDashboardBackend.Controllers
             }
         }
 
-        // POST: api/Auth/login
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)

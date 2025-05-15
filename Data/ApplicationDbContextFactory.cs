@@ -14,10 +14,13 @@ namespace WeatherDashboardBackend.Data
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnectionMySQL");
+            // Get the PostgreSQL connection string
+            var connectionString = configuration.GetConnectionString("DefaultConnectionPostgreSQL");
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+
+            // Use Npgsql for PostgreSQL
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }
