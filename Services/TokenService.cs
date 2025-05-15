@@ -1,6 +1,8 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using WeatherDashboardBackend.Models;
 
@@ -18,6 +20,13 @@ namespace WeatherDashboardBackend.Services
         public TokenService(IConfiguration config)
         {
             _jwtSettings = config.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
+
+            // Check secret key length at startup
+            var keyLength = Encoding.UTF8.GetByteCount(_jwtSettings.SecretKey);
+            if (keyLength < 32)
+            {
+                throw new ArgumentException($"SecretKey must be at least 32 bytes (256 bits). Current length: {keyLength} bytes.");
+            }
         }
 
         public string GenerateToken(UserResponse user)
