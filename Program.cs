@@ -8,8 +8,17 @@ using WeatherDashboardBackend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Setup PostgreSQL Database Context (Neon)
+// Get connection string from appsettings.json
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionPostgreSQL");
+
+// Override with environment variable if available (Railway)
+var envConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+if (!string.IsNullOrEmpty(envConnectionString))
+{
+    connectionString = envConnectionString;
+}
+
+// Setup PostgreSQL Database Context (Neon)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -52,23 +61,26 @@ builder.Services.AddAuthentication(options =>
 // Add Authorization Service
 builder.Services.AddAuthorization();
 
-// Add CORS policy before building the app
+// Add CORS policy (adjust frontend URLs as needed)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // React frontend URL
+            policy.WithOrigins("http://localhost:3000") // Change to your frontend URL in production
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
 
-// Add Controllers (This is the missing line)
+// Add Controllers
 builder.Services.AddControllers();
 
-// Build the app
 var app = builder.Build();
+
+// Bind to Railway port (or default 5000)
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -87,9 +99,8 @@ app.UseCors("AllowReactApp");
 
 // Enable authentication and authorization
 app.UseAuthentication();
-app.UseAuthorization(); // Ensure this comes after UseAuthentication()
+app.UseAuthorization();
 
-// Configure routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
