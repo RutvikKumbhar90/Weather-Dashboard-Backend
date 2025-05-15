@@ -11,15 +11,19 @@ namespace WeatherDashboardBackend.Data
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables() // Add env vars support
                 .Build();
 
-            // Get the PostgreSQL connection string
             var connectionString = configuration.GetConnectionString("DefaultConnectionPostgreSQL");
 
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            var envConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+            if (!string.IsNullOrEmpty(envConnectionString))
+            {
+                connectionString = envConnectionString;
+            }
 
-            // Use Npgsql for PostgreSQL
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseNpgsql(connectionString);
 
             return new ApplicationDbContext(optionsBuilder.Options);

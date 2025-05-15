@@ -14,10 +14,10 @@ namespace WeatherDashboardBackend.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Make the Email field unique in the database
+            // Enforce unique Email in UserResponse
             modelBuilder.Entity<UserResponse>()
                 .HasIndex(u => u.Email)
-                .IsUnique(); // This enforces a unique constraint on the Email field
+                .IsUnique();
         }
 
         public DbSet<UserResponse> User { get; set; }

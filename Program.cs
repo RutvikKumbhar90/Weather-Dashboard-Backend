@@ -8,17 +8,20 @@ using WeatherDashboardBackend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Get connection string from appsettings.json
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionPostgreSQL");
+// Load config including environment variables
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-// Override with environment variable if available (Railway)
+// Get connection string from config or env var override
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnectionPostgreSQL");
 var envConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
 if (!string.IsNullOrEmpty(envConnectionString))
 {
     connectionString = envConnectionString;
 }
 
-// Setup PostgreSQL Database Context (Neon)
+// Setup PostgreSQL DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -32,11 +35,10 @@ builder.Services.AddHttpClient<ITemperatureService, TemperatureService>();
 // Register JwtSettings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
-// Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 if (jwtSettings == null)
 {
-    throw new InvalidOperationException("JWT settings are not configured in the appsettings.");
+    throw new InvalidOperationException("JWT settings are not configured.");
 }
 
 builder.Services.AddAuthentication(options =>
@@ -58,31 +60,28 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Add Authorization Service
+// Authorization
 builder.Services.AddAuthorization();
 
-// Add CORS policy (adjust frontend URLs as needed)
+// CORS (adjust URL accordingly)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000") // Change to your frontend URL in production
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // change for production frontend
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
-// Add Controllers
+// Controllers
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Bind to Railway port (or default 5000)
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -94,10 +93,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Use CORS policy
 app.UseCors("AllowReactApp");
 
-// Enable authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
