@@ -76,11 +76,11 @@ try
         });
     });
 
-    // Add Health Checks service (THIS IS THE MISSING PART)
+    // Health Checks service
     builder.Services.AddHealthChecks();
 
-    // Controllers
-    builder.Services.AddControllers();
+    // Replace AddControllers() with AddControllersWithViews() to enable MVC views & TempData support
+    builder.Services.AddControllersWithViews();
 
     var app = builder.Build();
 
