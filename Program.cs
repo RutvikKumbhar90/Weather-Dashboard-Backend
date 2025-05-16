@@ -76,6 +76,9 @@ try
         });
     });
 
+    // Add Health Checks service (THIS IS THE MISSING PART)
+    builder.Services.AddHealthChecks();
+
     // Controllers
     builder.Services.AddControllers();
 
@@ -100,6 +103,7 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    // Health checks middleware
     app.UseHealthChecks("/health");
 
     app.MapControllerRoute(
