@@ -1,0 +1,8 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "./WeatherDashboardBackend/Dockerfile"
+
+[deploy]
+startCommand = "dotnet WeatherDashboardBackend.dll"
+restartPolicyType = "always"
+healthcheckPath = "/health"

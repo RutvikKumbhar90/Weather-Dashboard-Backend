@@ -1,4 +1,23 @@
+# Build folders
 bin/
 obj/
 /publish/
+
+# User-specific files
+*.user
+*.suo
+*.vs/
+.vscode/
+
+# Environment variables file
 .env
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker files you might want to ignore if generated (optional)
+docker-compose.override.yml

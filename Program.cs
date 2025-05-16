@@ -100,6 +100,8 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.UseHealthChecks("/health");
+
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}");
